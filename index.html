@@ -115,20 +115,42 @@
             return match ? match[1].trim().split('\n').map(t => t.trim()) : [];
         }
         
+        function cleanTalentName(talent) {
+            return talent.replace(/\s*\[.*?\]/g, '').trim(); // Remove anything in brackets
+        }
+
+        function shouldIgnoreTalent(talent) {
+            const ignoredTalents = [
+                "Aerial Assault",
+                "Chain of Perfection",
+                "Engage",
+                "Critical Attack",
+                "Thresher Scales",
+                "Deepfolk",
+                "Grasp of Eylis",
+                "Voideye",
+                "Voidwalker Contract",
+                "Mercy Kill",
+                "The Sound From Below",
+            ];
+            return ignoredTalents.includes(talent) || talent.includes("Unbounded");
+        }
+
         function compareTalents() {
             if (!buildTalents.length) return alert('Fetch a build first');
-            
+
             const gameTalentsText = document.getElementById('gameTalents').value;
-            const gameTalents = extractTalents(gameTalentsText);
-            
-            const missingTalents = buildTalents.filter(t => !gameTalents.includes(t));
-            const extraTalents = gameTalents.filter(t => !buildTalents.includes(t));
-            
+            const gameTalents = extractTalents(gameTalentsText).map(cleanTalentName);
+            const cleanedBuildTalents = buildTalents.map(cleanTalentName);
+
+            const missingTalents = cleanedBuildTalents.filter(t => !gameTalents.includes(t));
+            const extraTalents = gameTalents.filter(t => !cleanedBuildTalents.includes(t) && !shouldIgnoreTalent(t));
+
             const missingList = document.getElementById('missingList');
             const extraList = document.getElementById('extraList');
             missingList.innerHTML = '';
             extraList.innerHTML = '';
-            
+
             missingTalents.forEach(talent => {
                 const li = document.createElement('li');
                 li.classList.add('missing');
@@ -138,7 +160,7 @@
                 };
                 missingList.appendChild(li);
             });
-            
+
             extraTalents.forEach(talent => {
                 const li = document.createElement('li');
                 li.textContent = talent;
@@ -149,6 +171,7 @@
                 extraList.appendChild(li);
             });
         }
+
     </script>
 </body>
 </html>
