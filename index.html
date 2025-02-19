@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepwoken Talent Diff</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            padding: 20px;
+            text-align: center;
+        }
+        h2, h3 {
+            color: #cdd6f4;
+        }
+        input, textarea, button {
+            background-color: #313244;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+        button {
+            cursor: pointer;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: #181825;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+        .talent-list {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            text-align: left;
+        }
+        .talent-column {
+            width: 48%;
+            padding: 10px;
+            background-color: #252533;
+            border-radius: 10px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .missing {
+            color: #f38ba8;
+        }
+        .extra {
+            color: #89b4fa;
+        }
+        .selected {
+            background-color: #16171d;
+            color:#888888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Deepwoken Talent Comparator</h2>
+        <label for="buildId">Enter Build ID:</label>
+        <input type="text" id="buildId" placeholder="Build ID">
+        <button onclick="fetchBuild()">Fetch Build</button>
+        
+        <h3>Paste In-Game Talents:</h3>
+        <textarea id="gameTalents" rows="10" cols="50" placeholder="Paste in-game talents here..."></textarea>
+        <button onclick="compareTalents()">Compare</button>
+        
+        <h3>Results:</h3>
+        <div class="talent-list">
+            <div class="talent-column">
+                <h3>Missing Talents</h3>
+                <ul id="missingList"></ul>
+            </div>
+            <div class="talent-column">
+                <h3>Extra Talents</h3>
+                <ul id="extraList"></ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let buildTalents = [];
+        
+        async function fetchBuild() {
+            const buildId = document.getElementById('buildId').value;
+            if (!buildId) return alert('Enter a Build ID');
+            
+            try {
+                const response = await fetch(`https://api.deepwoken.co/build?id=${buildId}`);
+                const data = await response.json();
+                buildTalents = data.talents || [];
+                alert('Build data fetched!');
+            } catch (error) {
+                alert('Error fetching build data');
+            }
+        }
+        
+        function extractTalents(text) {
+            const match = text.match(/== TALENTS ==\n([\s\S]*)/);
+            return match ? match[1].trim().split('\n').map(t => t.trim()) : [];
+        }
+        
+        function compareTalents() {
+            if (!buildTalents.length) return alert('Fetch a build first');
+            
+            const gameTalentsText = document.getElementById('gameTalents').value;
+            const gameTalents = extractTalents(gameTalentsText);
+            
+            const missingTalents = buildTalents.filter(t => !gameTalents.includes(t));
+            const extraTalents = gameTalents.filter(t => !buildTalents.includes(t));
+            
+            const missingList = document.getElementById('missingList');
+            const extraList = document.getElementById('extraList');
+            missingList.innerHTML = '';
+            extraList.innerHTML = '';
+            
+            missingTalents.forEach(talent => {
+                const li = document.createElement('li');
+                li.classList.add('missing');
+                li.textContent = talent;
+                li.onclick = function() {
+                    li.classList.toggle('selected');
+                };
+                missingList.appendChild(li);
+            });
+            
+            extraTalents.forEach(talent => {
+                const li = document.createElement('li');
+                li.textContent = talent;
+                li.classList.add('extra');
+                li.onclick = function() {
+                    li.classList.toggle('selected');
+                };
+                extraList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
